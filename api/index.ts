@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { Request, Response } from 'express';
 import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
@@ -31,7 +31,7 @@ if (fs.existsSync(publicPath)) {
 }
 
 // SPA fallback - servir index.html para todas as rotas não encontradas
-app.get('*', (req, res) => {
+app.get('*', (req: Request, res: Response) => {
   const indexPath = path.join(publicPath, 'index.html');
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
