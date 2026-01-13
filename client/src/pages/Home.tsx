@@ -1,14 +1,23 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Heart, ShoppingCart, Search, Phone, Mail } from "lucide-react";
+import { ShoppingCart, Search, Phone, Mail, User, LogOut } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { Link } from "wouter";
+import { useSupabaseAuth } from "@/hooks/useSupabaseAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const { user, isAuthenticated, signOut, loading: authLoading } = useSupabaseAuth();
 
   const { data: products, isLoading } = trpc.products.list.useQuery();
   const addToCartMutation = trpc.cart.add.useMutation();
@@ -24,6 +33,10 @@ export default function Home() {
 
   const handleAddToCart = (productId: number) => {
     addToCartMutation.mutate({ productId, quantity: 1 });
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -43,8 +56,39 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm text-foreground hover:text-accent transition">Entrar</Link>
-            <Link href="/registro" className="text-sm bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">Registrar</Link>
+            {authLoading ? (
+              <div className="w-8 h-8 rounded-full bg-muted animate-pulse" />
+            ) : isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="w-5 h-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    {user?.email}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Minha Conta
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive cursor-pointer">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link href="/login" className="text-sm text-foreground hover:text-accent transition">Entrar</Link>
+                <Link href="/registro" className="text-sm bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent/90 transition">Registrar</Link>
+              </>
+            )}
             <Link href="/cart" className="text-foreground hover:text-accent transition">
               <ShoppingCart className="w-6 h-6" />
             </Link>
